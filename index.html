@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>English Adventure Quest — Josbrevar07 Edition</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #111827;
+        --tile: #1f2937;
+        --tile2: #243142;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --ok: #22c55e;
+        --primary: #3b82f6;
+        --warn: #ef4444;
+        --accent: #facc15;
+        --deep: #0b1225;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, Segoe UI, Roboto, Arial;
+        background: linear-gradient(180deg, #0b1020, #0f172a);
+        color: var(--text);
+      }
+      header {
+        padding: 14px 16px;
+        background: var(--deep);
+        border-bottom: 1px solid #1f2937;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+      header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .ads {
+        background: #0d1324;
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+        font-size: 14px;
+        color: var(--accent);
+        margin: 10px 16px;
+      }
+
+      #boardScreen {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 16px;
+        padding: 16px;
+      }
+      @media (max-width: 768px) {
+        #boardScreen {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      #statusBanner {
+        grid-column: 1/-1;
+        background: #0d1324;
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 18px;
+        font-weight: 700;
+        text-align: center;
+        letter-spacing: 0.3px;
+        margin-bottom: 8px;
+      }
+      #captionBox {
+        grid-column: 1/-1;
+        text-align: center;
+        font-size: 16px;
+        margin: 8px 0;
+        color: var(--accent);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      }
+      .card h2 {
+        margin: 0;
+        padding: 12px 14px;
+        border-bottom: 1px solid #1f2937;
+        font-size: 16px;
+      }
+      .card .content {
+        padding: 14px;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      select,
+      button {
+        background: #0f172a;
+        border: 1px solid #1f2937;
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 14px;
+      }
+      button {
+        cursor: pointer;
+        transition: transform 0.05s ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+      }
+      button.primary {
+        background: var(--primary);
+        border-color: #1e3a8a;
+      }
+      button.success {
+        background: var(--ok);
+        border-color: #166534;
+        color: #062e0a;
+      }
+      button.warn {
+        background: var(--warn);
+        border-color: #7f1d1d;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .players {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #0d1324;
+        border: 1px solid #1f2937;
+        border-radius: 999px;
+        padding: 8px 12px;
+      }
+      .dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+      }
+      .dot.p1 {
+        background: #22c55e;
+      }
+      .dot.p2 {
+        background: #3b82f6;
+      }
+      .dot.p3 {
+        background: #f59e0b;
+      }
+      .dot.p4 {
+        background: #ec4899;
+      }
+      .dot.p5 {
+        background: #a78bfa;
+      }
+      .dot.p6 {
+        background: #10b981;
+      }
+      .turn {
+        font-weight: 600;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+        padding: 16px;
+      }
+      .tile {
+        position: relative;
+        background: var(--tile);
+        border: 1px solid #263245;
+        border-radius: 10px;
+        height: 74px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tile:nth-child(odd) {
+        background: var(--tile2);
+      }
+      .tile .num {
+        position: absolute;
+        top: 6px;
+        left: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .tile.finish {
+        outline: 2px solid var(--ok);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2) inset;
+      }
+      .tile.benefit {
+        outline: 2px dashed var(--ok);
+      }
+      .tile.trap {
+        outline: 2px dashed var(--warn);
+      }
+      .tile.flash {
+        animation: flash 0.6s ease 2;
+      }
+      @keyframes flash {
+        0%,
+        100% {
+          background-color: inherit;
+        }
+        50% {
+          background-color: #facc15;
+        }
+      }
+      .token {
+        position: absolute;
+        bottom: 6px;
+        right: 6px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.7);
+        transform: scale(1);
+        transition: transform 0.15s;
+      }
+      .token.p1 {
+        background: #22c55e;
+      }
+      .token.p2 {
+        background: #3b82f6;
+      }
+      .token.p3 {
+        background: #f59e0b;
+      }
+      .token.p4 {
+        background: #ec4899;
+      }
+      .token.p5 {
+        background: #a78bfa;
+      }
+      .token.p6 {
+        background: #10b981;
+      }
+
+      #questionScreen {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      #questionScreen.show {
+        display: flex;
+      }
+      .chamber {
+        max-width: 780px;
+        width: 100%;
+        background: #0e1330;
+        border: 1px solid #222a4a;
+        border-radius: 16px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+        padding: 20px;
+      }
+      .chamber h2 {
+        margin: 0 0 8px 0;
+        font-size: 20px;
+        color: #c4b5fd;
+      }
+      .chamber .meta {
+        color: #9ca3af;
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+      .chamber .qtext {
+        font-size: 18px;
+        margin: 6px 0 12px 0;
+      }
+      .choices {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .choices label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        background: #0f172a;
+        border: 1px solid #1f2937;
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+      .chamber .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 12px;
+      }
+      .scoreFlash {
+        font-size: 13px;
+        color: #c4b5fd;
+        margin-top: 8px;
+      }
+      .closeHint {
+        font-size: 12px;
+        color: #9ca3af;
+        margin-top: 8px;
+      }
+
+      #endScreen {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.95);
+        color: white;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        text-align: center;
+      }
+      #endScreen h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+      }
+      #endScreen p {
+        font-size: 20px;
+        margin: 10px 0;
+      }
+      #endScreen button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 8px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+
+      footer {
+        background: #0b1225;
+        color: #9ca3af;
+        text-align: center;
+        padding: 16px;
+        font-size: 13px;
+        border-top: 1px solid #1f2937;
+      }
+      footer a {
+        color: #facc15;
+        text-decoration: none;
+        margin: 0 6px;
+      }
+      footer a:hover {
+        text-decoration: underline;
+      }
+      .footer-links p {
+        margin: 6px 0;
+      }
+      #adContainer {
+        text-align: center;
+        margin-top: 2rem;
+      }
+      #adContainer img {
+        max-width: 90%;
+        width: 300px;
+        height: auto;
+        border-radius: 8px;
+        transition: opacity 0.5s;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>English Adventure Quest</h1>
+      <p>
+        Roll the dice, feel the steps, hear the story, see the words. Learn with
+        rhythm and joy.
+      </p>
+    </header>
+
+    <div id="adsBanner" class="ads">
+      ✨ Learn English with joy — Josbrevar07
+    </div>
+
+    <div id="boardScreen">
+      <div id="statusBanner">
+        Welcome! Set players and press Start, to initiate the game!
+      </div>
+      <div id="captionBox"></div>
+
+      <section class="card">
+        <h2>Setup and controls</h2>
+        <div class="content">
+          <div class="row">
+            <label for="numPlayers"><strong>Players:</strong></label>
+            <select id="numPlayers">
+              <option>1</option>
+              <option>2</option>
+              <option>3</option>
+              <option>4</option>
+              <option>5</option>
+              <option>6</option>
+            </select>
+            <button id="btnStart" class="primary">Start game</button>
+          </div>
+          <div class="row">
+            <span
+              ><strong>Current turn:</strong>
+              <span id="turnName" class="turn">—</span></span
+            >
+          </div>
+          <div class="row">
+            <button id="btnRoll" class="success" disabled>Roll dice</button>
+            <span id="diceFace" aria-live="polite">🎲 —</span>
+          </div>
+          <div class="row">
+            <button id="btnQuestion" disabled>Enter challenge chamber</button>
+            <button id="btnSkip" class="warn" disabled>Skip/Forfeit</button>
+          </div>
+          <div class="players" id="playersList"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Board (reach 30 to win)</h2>
+        <div class="grid" id="board"></div>
+      </section>
+    </div>
+
+    <div id="questionScreen">
+      <div class="chamber">
+        <h2>Challenge chamber</h2>
+        <div class="meta" id="qMeta">Level: — • Player: —</div>
+        <div class="qtext" id="qText"></div>
+        <div id="qChoices" class="choices"></div>
+        <div class="row">
+          <button id="btnSubmit" class="success" disabled>Submit answer</button>
+          <button id="btnBack" class="warn">Return to board</button>
+        </div>
+        <div class="scoreFlash" id="qFeedback"></div>
+        <div class="closeHint">
+          After submitting, you'll return to the board automatically.
+        </div>
+      </div>
+    </div>
+
+    <div id="endScreen">
+      <h1>🎉 Game Over 🎉</h1>
+      <p id="raceWinner">🏁 Race Winner: —</p>
+      <p id="knowledgeWinner">🧠 Knowledge Champion: —</p>
+      <button onclick="location.reload()">Play Again</button>
+    </div>
+
+    <audio id="stepSound" src="step.mp3" preload="auto"></audio>
+    <audio id="winSound" src="win.mp3" preload="auto"></audio>
+    <audio id="correctSound" src="correct.mp3" preload="auto"></audio>
+    <audio id="wrongSound" src="wrong.mp3" preload="auto"></audio>
+
+    <footer>
+      Designed by: Josbrevar07
+      <div
+        style="
+          margin-top: 10px;
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        "
+      >
+        <a
+          href="https://walink.co/341b8e"
+          target="_blank"
+          style="text-decoration: none; color: inherit"
+          aria-label="WhatsApp"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+          >
+            <path
+              d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://www.instagram.com/josbrevar07/"
+          target="_blank"
+          style="text-decoration: none; color: inherit"
+          aria-label="Instagram"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+          >
+            <path
+              d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://www.facebook.com/josue.brenesvargas"
+          target="_blank"
+          style="text-decoration: none; color: inherit"
+          aria-label="Facebook"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+          >
+            <path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.93 2.86 7.19 6.58 7.88v-5.57H4.69V8h1.89V6.24c0-1.87 1.1-2.89 2.78-2.89.81 0 1.66.15 1.66.15v1.83h-.94c-.93 0-1.22.58-1.22 1.17V8h2.08l-.33 2.31H8.87v5.57C12.14 15.19 16 11.93 16 8c0-4.42-3.58-8-8-8z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://www.google.co.cr/?gws_rd=ssl"
+          target="_blank"
+          style="text-decoration: none; color: inherit"
+          aria-label="Google"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+          >
+            <path
+              d="M15.545 6.558a9.4 9.4 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.7 7.7 0 0 1 5.352 2.082l-2.284 2.284A4.35 4.35 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.8 4.8 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.7 3.7 0 0 0 1.599-2.431H8v-3.08z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://www.youtube.com/@josbrevar0773"
+          target="_blank"
+          style="text-decoration: none; color: inherit"
+          aria-label="YouTube"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+          >
+            <path
+              d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.01 2.01 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.01 2.01 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31 31 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.01 2.01 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A100 100 0 0 1 7.858 2zM6.4 5.209v4.818l4.157-2.408z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://www.microsoft.com/es-es/microsoft-365/outlook/email-and-calendar-software-microsoft-outlook?deeplink=%2fowa%2f&sdf=0"
+          target="_blank"
+          style="text-decoration: none; color: inherit"
+          aria-label="Microsoft"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+          >
+            <path
+              d="M7.462 0H0v7.19h7.462zM16 0H8.538v7.19H16zM7.462 8.211H0V16h7.462zm8.538 0H8.538V16H16z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://josbrevar07.github.io/blog_del_profe_josue_2.0/"
+          target="_blank"
+          style="text-decoration: none; color: inherit"
+          aria-label="Blog"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M16 8a8 8 0 0 1-7.022 7.94l1.902-7.098a3 3 0 0 0 .05-1.492A3 3 0 0 0 10.237 6h5.511A8 8 0 0 1 16 8M0 8a8 8 0 0 0 7.927 8l1.426-5.321a3 3 0 0 1-.723.255 3 3 0 0 1-1.743-.147 3 3 0 0 1-1.043-.7L.633 4.876A8 8 0 0 0 0 8m5.004-.167L1.108 3.936A8.003 8.003 0 0 1 15.418 5H8.066a3 3 0 0 0-1.252.243 2.99 2.99 0 0 0-1.81 2.59M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4"
+            />
+          </svg>
+        </a>
+      </div>
+      ©2025. Copyright. All rights reserved.
+      <div class="footer-links">
+        <p>
+          <a href="https://clases-de-manejo-personalizadas.com/"
+            >Clases de manejo personalizadas, página web.</a
+          >
+        </p>
+        <p>
+          <a href="https://josbrevar07.github.io/servicio_de_impresiones/"
+            >Servicio de impresiones a domicilio, página web.</a
+          >
+        </p>
+        <p>
+          <a href="https://josbrevar07.github.io/learning_any_language/"
+            >Learning Any Language, página web.</a
+          >
+        </p>
+        <p>
+          <a href="https://www.ivettenutricionista.com/"
+            >Consultorio de Nutrición, página web.</a
+          >
+        </p>
+      </div>
+      <div id="adContainer">
+        <img id="adImage" src="vehiculo_dekra.jpg" alt="Advertisement" />
+      </div>
+    </footer>
+
+    <script>
+      /* ====== State ====== */
+      const state = {
+        tiles: 30,
+        players: [],
+        current: 0,
+        rolled: null,
+        finished: false,
+        animating: false,
+        awaitingAnswer: false,
+        currentQ: null,
+        speak: true,
+        sound: true,
+        pools: { easy: [], medium: [], hard: [] },
+        raceWinnerName: null,
+      };
+
+      const colors = ["p1", "p2", "p3", "p4", "p5", "p6"];
+
+      /* ====== Special tiles ====== */
+      const specialTiles = {
+        4: {
+          type: "benefit",
+          effect: +1,
+          message: "Lucky boost! Step forward 1.",
+        },
+        7: { type: "trap", effect: -2, message: "Sticky mud! Move back 2." },
+        10: {
+          type: "benefit",
+          effect: +2,
+          message: "Shortcut trail! Advance 2.",
+        },
+        13: { type: "trap", effect: -3, message: "Wind gust! Back 3." },
+        16: {
+          type: "benefit",
+          effect: +3,
+          message: "Golden bridge! Advance 3.",
+        },
+        19: {
+          type: "trap",
+          effect: -2,
+          message: "Question confusion! Back 2.",
+        },
+        22: {
+          type: "benefit",
+          effect: +2,
+          message: "Teacher’s help! Advance 2.",
+        },
+        26: { type: "trap", effect: -1, message: "Slippery rock! Back 1." },
+      };
+
+      /* ====== Multiple-choice questions (expanded) ====== */
+      const questions = [
+        // EASY
+        {
+          level: "easy",
+          type: "mc",
+          text: "___ you like pizza?",
+          choices: ["Do", "Does", "Did"],
+          answer: "Do",
+        },
+        {
+          level: "easy",
+          type: "mc",
+          text: "___ is your name?",
+          choices: ["What", "Where", "How many"],
+          answer: "What",
+        },
+        {
+          level: "easy",
+          type: "mc",
+          text: "She ___ my friend.",
+          choices: ["is", "are", "am"],
+          answer: "is",
+        },
+        {
+          level: "easy",
+          type: "mc",
+          text: "I ___ a book.",
+          choices: ["read", "reads", "reading"],
+          answer: "read",
+        },
+        {
+          level: "easy",
+          type: "mc",
+          text: "They ___ happy today.",
+          choices: ["is", "are", "am"],
+          answer: "are",
+        },
+        {
+          level: "easy",
+          type: "mc",
+          text: "Where ___ you from?",
+          choices: ["are", "is", "am"],
+          answer: "are",
+        },
+        {
+          level: "easy",
+          type: "mc",
+          text: "Choose the WH-word: ___ do you live?",
+          choices: ["What", "Where", "When"],
+          answer: "Where",
+        },
+
+        // MEDIUM
+        {
+          level: "medium",
+          type: "mc",
+          text: "Past simple: ___ you go to the concert?",
+          choices: ["Do", "Did", "Were"],
+          answer: "Did",
+        },
+        {
+          level: "medium",
+          type: "mc",
+          text: "Present 3rd person: ___ she work on Sundays?",
+          choices: ["Do", "Does", "Is"],
+          answer: "Does",
+        },
+        {
+          level: "medium",
+          type: "mc",
+          text: "We ___ to the park yesterday.",
+          choices: ["go", "went", "gone"],
+          answer: "went",
+        },
+        {
+          level: "medium",
+          type: "mc",
+          text: "He ___ playing football when it rained.",
+          choices: ["was", "were", "is"],
+          answer: "was",
+        },
+        {
+          level: "medium",
+          type: "mc",
+          text: "They have ___ homework.",
+          choices: ["much", "many", "a"],
+          answer: "much",
+        },
+        {
+          level: "medium",
+          type: "mc",
+          text: "She ___ coffee every morning.",
+          choices: ["drink", "drinks", "drinking"],
+          answer: "drinks",
+        },
+        {
+          level: "medium",
+          type: "mc",
+          text: "We have been friends ___ years.",
+          choices: ["for", "since", "during"],
+          answer: "for",
+        },
+
+        // HARD
+        {
+          level: "hard",
+          type: "mc",
+          text: "Future: ___ you travel next month?",
+          choices: ["Will", "Do", "Did"],
+          answer: "Will",
+        },
+        {
+          level: "hard",
+          type: "mc",
+          text: "Tag: You can swim, ___?",
+          choices: ["can you", "can’t you", "can he"],
+          answer: "can’t you",
+        },
+        {
+          level: "hard",
+          type: "mc",
+          text: "What time: The class starts at 8.",
+          choices: [
+            "What time does the class start?",
+            "When the class starts at 8?",
+            "The class starts at what time?",
+          ],
+          answer: "What time does the class start?",
+        },
+        {
+          level: "hard",
+          type: "mc",
+          text: "Conditional: If I ___ rich, I would travel the world.",
+          choices: ["am", "were", "was"],
+          answer: "were",
+        },
+        {
+          level: "hard",
+          type: "mc",
+          text: "Passive voice: The cake ___ by Mary.",
+          choices: ["was baked", "baked", "is bake"],
+          answer: "was baked",
+        },
+        {
+          level: "hard",
+          type: "mc",
+          text: "Reported speech: He said he ___ late.",
+          choices: ["is", "was", "were"],
+          answer: "was",
+        },
+        {
+          level: "hard",
+          type: "mc",
+          text: "I prefer tea ___ coffee.",
+          choices: ["than", "to", "over"],
+          answer: "to",
+        },
+      ];
+
+      /* ====== Randomization helpers ====== */
+      function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+      }
+      function preparePools() {
+        state.pools.easy = questions.filter((q) => q.level === "easy");
+        state.pools.medium = questions.filter((q) => q.level === "medium");
+        state.pools.hard = questions.filter((q) => q.level === "hard");
+        shuffle(state.pools.easy);
+        shuffle(state.pools.medium);
+        shuffle(state.pools.hard);
+      }
+      function getLevelForTile(tile) {
+        if (tile > 20) return "hard";
+        if (tile > 10) return "medium";
+        return "easy";
+      }
+      function pickQuestionForTile(tile) {
+        const level = getLevelForTile(tile);
+        const pool = state.pools[level];
+        if (pool.length === 0) preparePools();
+        const q = pool.pop(); // draw without replacement
+        shuffle(q.choices); // randomize choices order
+        return q;
+      }
+
+      /* ====== DOM ====== */
+      const el = {
+        boardScreen: document.getElementById("boardScreen"),
+        questionScreen: document.getElementById("questionScreen"),
+        statusBanner: document.getElementById("statusBanner"),
+        captionBox: document.getElementById("captionBox"),
+        board: document.getElementById("board"),
+        numPlayers: document.getElementById("numPlayers"),
+        btnStart: document.getElementById("btnStart"),
+        btnRoll: document.getElementById("btnRoll"),
+        btnQuestion: document.getElementById("btnQuestion"),
+        btnSkip: document.getElementById("btnSkip"),
+        diceFace: document.getElementById("diceFace"),
+        playersList: document.getElementById("playersList"),
+        turnName: document.getElementById("turnName"),
+        // Chamber
+        qMeta: document.getElementById("qMeta"),
+        qText: document.getElementById("qText"),
+        qChoices: document.getElementById("qChoices"),
+        btnSubmit: document.getElementById("btnSubmit"),
+        btnBack: document.getElementById("btnBack"),
+        qFeedback: document.getElementById("qFeedback"),
+        // End screen
+        endScreen: document.getElementById("endScreen"),
+        raceWinner: document.getElementById("raceWinner"),
+        knowledgeWinner: document.getElementById("knowledgeWinner"),
+        // Sounds
+        stepSound: document.getElementById("stepSound"),
+        winSound: document.getElementById("winSound"),
+        correctSound: document.getElementById("correctSound"),
+        wrongSound: document.getElementById("wrongSound"),
+        // Ads
+        adsBanner: document.getElementById("adsBanner"),
+        adImage: document.getElementById("adImage"),
+      };
+
+      /* ====== Narration + captions (constant instructions) ====== */
+      function speak(text, lang = "en-US", rate = 0.95) {
+        if ("speechSynthesis" in window) {
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.lang = lang;
+          utter.rate = rate;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utter);
+        }
+      }
+      function announce(text) {
+        el.statusBanner.textContent = text;
+        el.captionBox.textContent = text;
+        speak(text); // always speak instructions/events
+      }
+
+      /* ====== Sounds ====== */
+      let audioCtx;
+      function playElement(a) {
+        try {
+          a.currentTime = 0;
+          a.play();
+        } catch {}
+      }
+      function beep(freq = 600, duration = 120, volume = 0.2) {
+        try {
+          audioCtx =
+            audioCtx ||
+            new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator(),
+            g = audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = freq;
+          g.gain.value = volume;
+          osc.connect(g);
+          g.connect(audioCtx.destination);
+          osc.start();
+          setTimeout(() => osc.stop(), duration);
+        } catch {}
+      }
+      function playStep() {
+        if (el.stepSound?.src) playElement(el.stepSound);
+        else beep(640, 100, 0.18);
+      }
+      function playCorrect() {
+        if (el.correctSound?.src) playElement(el.correctSound);
+        else beep(880, 180, 0.22);
+      }
+      function playWrong() {
+        if (el.wrongSound?.src) playElement(el.wrongSound);
+        else beep(220, 200, 0.22);
+      }
+      function playWin() {
+        if (el.winSound?.src) playElement(el.winSound);
+        else {
+          beep(740, 160, 0.25);
+          setTimeout(() => beep(980, 200, 0.25), 180);
+        }
+      }
+
+      /* ====== UI helpers ====== */
+      function resetUI() {
+        el.questionScreen.classList.remove("show");
+        el.endScreen.style.display = "none";
+        el.diceFace.textContent = "🎲 —";
+        el.btnRoll.disabled = true;
+        el.btnQuestion.disabled = true;
+        el.btnSkip.disabled = true;
+        el.qFeedback.textContent = "";
+        el.qChoices.innerHTML = "";
+        el.btnSubmit.disabled = true;
+        announce(
+          "Welcome, Quest Master Josbrevar07. Set players and press Start."
+        );
+      }
+      function renderBoard() {
+        el.board.innerHTML = "";
+        for (let i = 1; i <= state.tiles; i++) {
+          const div = document.createElement("div");
+          div.className = "tile" + (i === state.tiles ? " finish" : "");
+          if (specialTiles[i]) div.classList.add(specialTiles[i].type);
+          div.dataset.index = i;
+          const num = document.createElement("div");
+          num.className = "num";
+          num.textContent = i;
+          div.appendChild(num);
+          el.board.appendChild(div);
+        }
+        state.players.forEach((_, idx) => placeToken(idx));
+      }
+      function placeToken(idx) {
+        Array.from(el.board.children).forEach((tile) => {
+          const t = tile.querySelector(".token." + colors[idx]);
+          if (t) t.remove();
+        });
+        const pos = Math.min(state.players[idx].pos, state.tiles);
+        const tile = el.board.children[pos - 1];
+        if (!tile) return;
+        const tok = document.createElement("div");
+        tok.className = "token " + colors[idx];
+        tile.appendChild(tok);
+      }
+      function updatePlayersList() {
+        el.playersList.innerHTML = "";
+        state.players.forEach((pl, idx) => {
+          const badge = document.createElement("div");
+          badge.className = "badge";
+          const dot = document.createElement("div");
+          dot.className = "dot " + colors[idx];
+          const name = document.createElement("span");
+          name.textContent = `${pl.name} — Tile ${pl.pos} — Points ${pl.points}`;
+          badge.appendChild(dot);
+          badge.appendChild(name);
+          el.playersList.appendChild(badge);
+        });
+        el.turnName.textContent = state.players.length
+          ? state.players[state.current].name
+          : "—";
+      }
+
+      /* ====== Screens ====== */
+      function showChamber() {
+        el.questionScreen.classList.add("show");
+      }
+      function returnToBoard() {
+        el.questionScreen.classList.remove("show");
+      }
+
+      /* ====== Animated movement (narration pauses during steps) ====== */
+      function animateMove(steps, onDone) {
+        if (state.animating) return;
+        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+        state.animating = true;
+        const player = state.players[state.current];
+        let remaining = Math.abs(steps),
+          dir = steps > 0 ? 1 : -1;
+
+        function step() {
+          if (remaining === 0) {
+            state.animating = false;
+            placeToken(state.current);
+            updatePlayersList();
+            if (onDone) onDone();
+            return;
+          }
+          player.pos = Math.max(1, Math.min(state.tiles, player.pos + dir));
+          placeToken(state.current);
+          updatePlayersList();
+          const tile = el.board.children[player.pos - 1];
+          const tok = tile.querySelector(".token." + colors[state.current]);
+          if (tok) {
+            tok.style.transform = "scale(1.15)";
+            setTimeout(() => (tok.style.transform = "scale(1)"), 120);
+          }
+          playStep();
+          remaining--;
+          setTimeout(step, 280);
+        }
+        step();
+      }
+
+      /* ====== Special tiles ====== */
+      function flashTile(pos) {
+        const tile = el.board.children[pos - 1];
+        if (tile) {
+          tile.classList.add("flash");
+          setTimeout(() => tile.classList.remove("flash"), 1200);
+        }
+      }
+      function checkSpecialTile(player, afterSpecial) {
+        const special = specialTiles[player.pos];
+        if (!special) {
+          afterSpecial && afterSpecial();
+          return;
+        }
+        flashTile(player.pos);
+        announce(
+          `${player.name}: ${special.type === "trap" ? "TRAP!" : "BENEFIT!"} ${
+            special.message
+          }`
+        );
+        animateMove(special.effect, afterSpecial);
+      }
+
+      /* ====== Core flow ====== */
+      function startGame() {
+        resetUI();
+        preparePools();
+        state.finished = false;
+        state.current = 0;
+        state.rolled = null;
+        state.raceWinnerName = null;
+        const n = parseInt(el.numPlayers.value, 10);
+        state.players = Array.from({ length: n }).map((_, i) => ({
+          name: `Player ${i + 1}`,
+          pos: 1,
+          points: 0,
+        }));
+        renderBoard();
+        updatePlayersList();
+        el.btnRoll.disabled = false;
+        el.btnSkip.disabled = false;
+        announce(
+          `Adventure begins with ${n} player(s). ${
+            state.players[state.current].name
+          }, roll when ready!`
+        );
+      }
+
+      function rollDice() {
+        if (state.finished || state.animating) return;
+        const roll = Math.floor(Math.random() * 6) + 1;
+        state.rolled = roll;
+        el.diceFace.textContent = `🎲 ${roll}`;
+        const p = state.players[state.current];
+        announce(`${p.name}, you rolled a ${roll}. March forward!`);
+        el.btnRoll.disabled = true;
+        el.btnQuestion.disabled = true;
+
+        animateMove(roll, () => {
+          if (checkWin()) return;
+          checkSpecialTile(p, () => {
+            if (checkWin()) return;
+            el.btnQuestion.disabled = false;
+            announce(
+              `${p.name}, enter the Challenge Chamber and choose your answer.`
+            );
+          });
+        });
+      }
+
+      function getQuestion() {
+        if (state.finished || state.animating) return;
+        const p = state.players[state.current];
+        const q = pickQuestionForTile(p.pos);
+        state.currentQ = q;
+        state.awaitingAnswer = true;
+
+        el.qMeta.textContent = `Level: ${q.level} • Player: ${p.name}`;
+        el.qText.textContent = q.text;
+        el.qFeedback.textContent = "";
+        el.qChoices.innerHTML = "";
+        el.btnSubmit.disabled = false;
+
+        q.choices.forEach((choice) => {
+          const id = "q_" + Math.random().toString(36).slice(2);
+          const label = document.createElement("label");
+          const radio = document.createElement("input");
+          radio.type = "radio";
+          radio.name = "qChoice";
+          radio.value = choice;
+          radio.id = id;
+          const span = document.createElement("span");
+          span.textContent = choice;
+          label.appendChild(radio);
+          label.appendChild(span);
+          el.qChoices.appendChild(label);
+        });
+
+        showChamber();
+        announce(`${p.name}, select the correct option and press Submit.`);
+      }
+
+      function submitAnswer() {
+        if (!state.awaitingAnswer || state.finished) return;
+        const q = state.currentQ;
+        const p = state.players[state.current];
+        const picked = document.querySelector("input[name='qChoice']:checked");
+        if (!picked) {
+          el.qFeedback.textContent = "Choose an option.";
+          announce(`${p.name}, choose one option to continue.`);
+          return;
+        }
+
+        const userAnswer = picked.value;
+        const correct = userAnswer === q.answer;
+
+        state.awaitingAnswer = false;
+        el.btnSubmit.disabled = true;
+
+        if (correct) {
+          p.points += 1;
+          el.qFeedback.textContent = `✅ Correct! +1 point. The answer is "${q.answer}".`;
+          playCorrect();
+          updatePlayersList();
+          announce(
+            `${p.name}, CORRECT! +1 point. The answer is ${q.answer}. Returning to the board.`
+          );
+          setTimeout(() => {
+            returnToBoard();
+            endQuestionPhase();
+          }, 900);
+        } else {
+          p.points = Math.max(0, p.points - 1);
+          el.qFeedback.textContent = `❌ Wrong! -1 point. The correct answer is "${q.answer}".`;
+          playWrong();
+          updatePlayersList();
+          announce(
+            `${p.name}, WRONG! -1 point. The correct answer is ${q.answer}. Step back one tile.`
+          );
+          setTimeout(() => {
+            returnToBoard();
+            animateMove(-1, () => {
+              if (checkWin()) return;
+              endQuestionPhase();
+            });
+          }, 900);
+        }
+      }
+
+      function endQuestionPhase() {
+        el.btnRoll.disabled = false;
+        el.btnQuestion.disabled = true;
+        el.btnSkip.disabled = false;
+        nextTurn();
+      }
+
+      function checkWin() {
+        const p = state.players[state.current];
+        if (p.pos >= state.tiles) {
+          state.finished = true;
+          state.raceWinnerName = p.name;
+          playWin();
+
+          // Determine Knowledge Champion(s)
+          const maxPoints = Math.max(...state.players.map((pl) => pl.points));
+          const champions = state.players
+            .filter((pl) => pl.points === maxPoints)
+            .map((pl) => pl.name);
+          const knowledgeWinner = champions.join(", ");
+
+          // Show end screen
+          el.raceWinner.textContent = `🏁 Race Winner: ${state.raceWinnerName}`;
+          el.knowledgeWinner.textContent = `🧠 Knowledge Champion: ${knowledgeWinner}`;
+          el.endScreen.style.display = "flex";
+
+          announce(
+            `Race Winner: ${state.raceWinnerName}. Knowledge Champion: ${knowledgeWinner}. Congratulations!`
+          );
+
+          // Disable controls
+          el.btnRoll.disabled = true;
+          el.btnQuestion.disabled = true;
+          el.btnSkip.disabled = true;
+          el.turnName.textContent = `${p.name} (Winner)`;
+          return true;
+        }
+        return false;
+      }
+
+      function nextTurn() {
+        if (state.finished) return;
+        state.current = (state.current + 1) % state.players.length;
+        state.rolled = null;
+        el.diceFace.textContent = "🎲 —";
+        el.turnName.textContent = state.players[state.current].name;
+        announce(
+          `${state.players[state.current].name}, it's your turn. Roll the dice!`
+        );
+      }
+
+      /* ====== Events ====== */
+      el.btnStart.addEventListener("click", startGame);
+      el.btnRoll.addEventListener("click", rollDice);
+      el.btnQuestion.addEventListener("click", getQuestion);
+      el.btnSubmit.addEventListener("click", submitAnswer);
+      el.btnBack.addEventListener("click", () => {
+        returnToBoard();
+        announce("Returning to the board. Turn will continue.");
+        endQuestionPhase();
+      });
+      el.btnSkip.addEventListener("click", () => {
+        if (state.finished || state.animating) return;
+        announce(
+          `${
+            state.players[state.current].name
+          } skips the turn. Next adventurer!`
+        );
+        nextTurn();
+      });
+
+      /* ====== Rotating text ads ====== */
+      const ads = [
+        "✨ Learn English with joy — Josbrevar07",
+        "🎶 Study on Learning Any Language",
+        "📱 If you need a website or online exercises just let us know",
+        "🌍 Contact below the game",
+      ];
+      let adTextIndex = 0;
+      function rotateAdsText() {
+        el.adsBanner.textContent = ads[adTextIndex];
+        adTextIndex = (adTextIndex + 1) % ads.length;
+      }
+      setInterval(rotateAdsText, 4000);
+      rotateAdsText();
+
+      /* ====== Rotating image ads ====== */
+      const adImages = [
+        "vehiculo_dekra.jpg",
+        "clases_manejo.jpg",
+        "Espanol.jpg",
+        "impresiones.jpg",
+        "LAL.jpg",
+        "ingles.jpg",
+        "necesita_pagina_web.png",
+        "ejercicios_linea.png",
+      ];
+      let adIndex = 0;
+      function rotateAdImages() {
+        const img = el.adImage;
+        img.style.opacity = 0;
+        setTimeout(() => {
+          img.src = adImages[adIndex];
+          img.style.opacity = 1;
+          adIndex = (adIndex + 1) % adImages.length;
+        }, 500);
+      }
+      setInterval(rotateAdImages, 6000);
+      rotateAdImages();
+
+      /* ====== Initial ====== */
+      resetUI();
+      renderBoard();
+    </script>
+  </body>
+</html>
